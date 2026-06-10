@@ -119,6 +119,67 @@
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
     }
 
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: var(--text);
+      background: #fafafa;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .type-extra .sub-field {
+      margin-bottom: 20px;
+    }
+
+    .type-extra .help-block .hint {
+      margin-top: 0;
+      margin-bottom: 4px;
+    }
+
+    .type-extra .help-block .hint:first-child {
+      margin-bottom: 6px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
     .hint {
       font-size: 0.8rem;
       color: var(--text-muted);
@@ -275,6 +336,89 @@
       <button type="button" id="calcBtn">计算个税</button>
     </div>
 
+    <div class="card">
+      <h2 class="card-title">其他分类所得（比例税率20%）</h2>
+
+      <div id="otherErrorMsg" class="error-msg"></div>
+
+      <div class="form-group">
+        <select id="otherType">
+          <option value="interest">利息股息红利所得</option>
+          <option value="rental">财产租赁所得</option>
+          <option value="transfer">财产转让所得</option>
+          <option value="occasional">偶然所得</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="otherIncome">收入金额（元）</label>
+        <div class="input-wrap">
+          <input type="number" id="otherIncome" placeholder="请输入收入金额" min="0" step="0.01">
+          <span>元</span>
+        </div>
+      </div>
+
+      <div class="form-group" id="otherTypeExtra">
+        <div id="extraRental" class="type-extra" hidden>
+          <label class="checkbox-label" for="rentalHousing">
+            <input type="checkbox" id="rentalHousing">
+            是否为出租住房（适用10%优惠税率）
+          </label>
+          <p class="hint">根据税法，收入≤4000元减除800元，收入&gt;4000元减除20%后计算</p>
+        </div>
+
+        <div id="extraTransfer" class="type-extra" hidden>
+          <div class="sub-field">
+            <label for="transferOriginal">财产原值（元）</label>
+            <div class="input-wrap">
+              <input type="number" id="transferOriginal" placeholder="请输入财产原值" min="0" step="0.01">
+              <span>元</span>
+            </div>
+          </div>
+          <div class="sub-field">
+            <label for="transferFee">合理费用（元）</label>
+            <div class="input-wrap">
+              <input type="number" id="transferFee" placeholder="请输入合理费用" min="0" step="0.01" value="0">
+              <span>元</span>
+            </div>
+            <p class="hint">合理费用，是指卖出财产时按照规定支付的有关费用。</p>
+          </div>
+          <div class="help-block">
+            <p class="hint">财产原值是指：</p>
+            <p class="hint">（1）有价证券：买入价以及买入时按规定缴纳的有关费用。</p>
+            <p class="hint">（2）建筑物：建造费或者购进价格以及其他有关费用。</p>
+            <p class="hint">（3）土地使用权：取得土地使用权所支付的金额、开发土地的费用等。</p>
+            <p class="hint">（4）机器设备、车船：购进价格、运输费、安装费等。</p>
+            <p class="hint">（5）其他财产参照以上方法确定。</p>
+          </div>
+        </div>
+
+        <div id="extraSimple" class="type-extra">
+          <p class="hint">无费用扣除，直接按20%税率计算</p>
+        </div>
+      </div>
+
+      <button type="button" id="calcOtherBtn">计算分类所得</button>
+    </div>
+
+    <div class="card results" id="otherResults">
+      <h2>计算结果</h2>
+      <p id="otherNoTaxHint" class="hint" hidden>扣除后无应税所得</p>
+      <div class="result-row">
+        <span class="label">应纳税所得额</span>
+        <span class="value" id="otherTaxableIncome">—</span>
+      </div>
+      <div class="result-row">
+        <span class="label">应纳税额</span>
+        <span class="value" id="otherTaxAmount">—</span>
+      </div>
+      <p id="otherRateHint" class="hint" hidden></p>
+      <div class="result-row highlight">
+        <span class="label">税后收入</span>
+        <span class="value" id="otherAfterTax">—</span>
+      </div>
+    </div>
+
     <div class="card results" id="results">
       <h2>计算结果</h2>
       <div class="result-row">
@@ -282,8 +426,20 @@
         <span class="value" id="taxableIncome">—</span>
       </div>
       <div class="result-row">
+        <span class="label">适用税率</span>
+        <span class="value" id="taxRate">—</span>
+      </div>
+      <div class="result-row">
         <span class="label">应纳税额</span>
         <span class="value" id="taxAmount">—</span>
+      </div>
+      <div class="result-row">
+        <span class="label">分类所得应纳税额</span>
+        <span class="value" id="otherTaxInSummary">—</span>
+      </div>
+      <div class="result-row">
+        <span class="label">合计应纳税额</span>
+        <span class="value" id="totalTaxAmount">—</span>
       </div>
       <div class="result-row highlight">
         <span class="label">税后收入</span>
@@ -309,6 +465,7 @@
     ];
 
     const STANDARD_DEDUCTION = 5000;
+    let savedOtherTax = null;
 
     function formatMoney(amount) {
       return amount.toLocaleString("zh-CN", {
@@ -350,6 +507,17 @@
       return isNaN(num) ? null : num;
     }
 
+    function parseRequiredNonNegative(value) {
+      if (value === "" || value === null || value === undefined) {
+        return null;
+      }
+      const num = parseFloat(value);
+      if (isNaN(num) || num < 0) {
+        return null;
+      }
+      return num;
+    }
+
     function showError(message) {
       const el = document.getElementById("errorMsg");
       el.textContent = message;
@@ -358,6 +526,143 @@
 
     function hideError() {
       document.getElementById("errorMsg").classList.remove("visible");
+    }
+
+    function showOtherError(message) {
+      const el = document.getElementById("otherErrorMsg");
+      el.textContent = message;
+      el.classList.add("visible");
+    }
+
+    function hideOtherError() {
+      document.getElementById("otherErrorMsg").classList.remove("visible");
+    }
+
+    function clearOtherOutput() {
+      hideOtherError();
+      savedOtherTax = null;
+      document.getElementById("otherResults").classList.remove("visible");
+      document.getElementById("otherNoTaxHint").hidden = true;
+      document.getElementById("otherRateHint").hidden = true;
+      document.getElementById("rentalHousing").checked = false;
+    }
+
+    function showOtherResults(taxableIncome, tax, afterTax, noTaxHint, rateHint) {
+      document.getElementById("otherTaxableIncome").textContent = formatMoney(taxableIncome);
+      document.getElementById("otherTaxAmount").textContent = formatMoney(tax);
+      document.getElementById("otherAfterTax").textContent = formatMoney(afterTax);
+      document.getElementById("otherNoTaxHint").hidden = !noTaxHint;
+      const rateHintEl = document.getElementById("otherRateHint");
+      if (rateHint) {
+        rateHintEl.textContent = rateHint;
+        rateHintEl.hidden = false;
+      } else {
+        rateHintEl.hidden = true;
+      }
+      document.getElementById("otherResults").classList.add("visible");
+    }
+
+    function calculateOtherTax(type, income, original, fee, isHousingRental) {
+      if (type === "interest" || type === "occasional") {
+        const taxableIncome = income;
+        const tax = taxableIncome * 0.2;
+        return { taxableIncome, tax, afterTax: income - tax, noTaxHint: false, rateHint: null };
+      }
+
+      if (type === "rental") {
+        const taxableIncome = income <= 4000 ? income - 800 : income * 0.8;
+        const adjustedTaxable = Math.max(0, taxableIncome);
+        const rate = isHousingRental ? 0.1 : 0.2;
+        const tax = adjustedTaxable * rate;
+        return {
+          taxableIncome: adjustedTaxable,
+          tax,
+          afterTax: income - tax,
+          noTaxHint: false,
+          rateHint: isHousingRental ? "出租住房已按10%税率计算" : "适用20%税率",
+        };
+      }
+
+      if (type === "transfer") {
+        const deductions = original + fee;
+        if (income < deductions) {
+          return {
+            taxableIncome: 0,
+            tax: 0,
+            afterTax: income - deductions,
+            noTaxHint: true,
+            rateHint: null,
+          };
+        }
+        const taxableIncome = income - deductions;
+        const tax = taxableIncome * 0.2;
+        return {
+          taxableIncome,
+          tax,
+          afterTax: income - deductions - tax,
+          noTaxHint: false,
+          rateHint: null,
+        };
+      }
+
+      return { taxableIncome: 0, tax: 0, afterTax: 0, noTaxHint: false, rateHint: null };
+    }
+
+    function handleCalculateOther() {
+      hideOtherError();
+      document.getElementById("otherNoTaxHint").hidden = true;
+      document.getElementById("otherRateHint").hidden = true;
+
+      const type = document.getElementById("otherType").value;
+      const income = parseRequiredNonNegative(
+        document.getElementById("otherIncome").value
+      );
+
+      if (income === null) {
+        const message =
+          type === "rental"
+            ? "请输入有效的收入金额（须为不小于 0 的数字）。"
+            : "请输入有效的收入金额（不能为空，且须为不小于 0 的数字）。";
+        showOtherError(message);
+        document.getElementById("otherResults").classList.remove("visible");
+        return;
+      }
+
+      let original = 0;
+      let fee = 0;
+
+      if (type === "transfer") {
+        original = parseRequiredNonNegative(
+          document.getElementById("transferOriginal").value
+        );
+        fee = parseRequiredNonNegative(
+          document.getElementById("transferFee").value
+        );
+
+        if (original === null) {
+          showOtherError("请输入有效的财产原值（不能为空，且须为不小于 0 的数字）。");
+          document.getElementById("otherResults").classList.remove("visible");
+          return;
+        }
+
+        if (fee === null) {
+          showOtherError("请输入有效的合理费用（不能为空，且须为不小于 0 的数字）。");
+          document.getElementById("otherResults").classList.remove("visible");
+          return;
+        }
+      }
+
+      const isHousingRental =
+        type === "rental" && document.getElementById("rentalHousing").checked;
+      const result = calculateOtherTax(type, income, original, fee, isHousingRental);
+      savedOtherTax = result.tax;
+      showOtherResults(
+        result.taxableIncome,
+        result.tax,
+        result.afterTax,
+        result.noTaxHint,
+        result.rateHint
+      );
     }
 
     function handleCalculate() {
@@ -394,20 +699,53 @@
       const result = calculateTax(income, insurance, deduction);
 
       document.getElementById("taxableIncome").textContent = formatMoney(result.taxableIncome);
+      if (result.taxableIncome <= 0) {
+        document.getElementById("taxRate").textContent = "0%（无需缴税）";
+      } else {
+        const bracket = getBracket(result.taxableIncome);
+        document.getElementById("taxRate").textContent = (bracket.rate * 100) + "%";
+      }
       document.getElementById("taxAmount").textContent = formatMoney(result.tax);
+      const otherTax = savedOtherTax !== null ? savedOtherTax : 0;
+      document.getElementById("otherTaxInSummary").textContent = formatMoney(otherTax);
+      document.getElementById("totalTaxAmount").textContent = formatMoney(result.tax + otherTax);
       document.getElementById("afterTax").textContent = formatMoney(result.afterTax);
       document.getElementById("results").classList.add("visible");
     }
 
     document.getElementById("calcBtn").addEventListener("click", handleCalculate);
 
-    document.querySelectorAll("input").forEach((input) => {
+    function updateOtherTypeExtra() {
+      clearOtherOutput();
+
+      const type = document.getElementById("otherType").value;
+      document.getElementById("extraRental").hidden = type !== "rental";
+      document.getElementById("extraTransfer").hidden = type !== "transfer";
+      document.getElementById("extraSimple").hidden =
+        type !== "interest" && type !== "occasional";
+    }
+
+    document.getElementById("otherType").addEventListener("change", updateOtherTypeExtra);
+    document.getElementById("calcOtherBtn").addEventListener("click", handleCalculateOther);
+    updateOtherTypeExtra();
+
+    document.querySelectorAll("#income, #insurance, #deduction").forEach((input) => {
       input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           handleCalculate();
         }
       });
     });
+
+    document
+      .querySelectorAll("#otherIncome, #transferOriginal, #transferFee")
+      .forEach((input) => {
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            handleCalculateOther();
+          }
+        });
+      });
   </script>
 </body>
 </html>
