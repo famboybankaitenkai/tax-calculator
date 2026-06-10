@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人所得税计算器</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --text: #1a1d26;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --accent: #eff6ff;
+      --success: #059669;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .page {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 48px 20px 32px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-of-type {
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrap span {
+      position: absolute;
+      right: 14px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 12px 44px 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: var(--text);
+      background: #fafafa;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+    }
+
+    button:active {
+      transform: scale(0.99);
+    }
+
+    .results {
+      display: none;
+    }
+
+    .results.visible {
+      display: block;
+    }
+
+    .results h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .result-row .label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .result-row .value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-row.highlight {
+      background: var(--accent);
+      margin: 0 -16px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border-bottom: none;
+    }
+
+    .result-row.highlight .value {
+      color: var(--success);
+      font-size: 1.25rem;
+    }
+
+    .error-msg {
+      display: none;
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+
+    .error-msg.visible {
+      display: block;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      line-height: 1.7;
+      padding: 0 8px;
+    }
+
+    @media (max-width: 480px) {
+      .page {
+        padding-top: 32px;
+      }
+
+      header h1 {
+        font-size: 1.5rem;
+      }
+
+      .card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>个人所得税计算器</h1>
+      <p>工资薪金 · 累计预扣法（单月）</p>
+    </header>
+
+    <div class="card">
+      <div id="errorMsg" class="error-msg"></div>
+
+      <div class="form-group">
+        <label for="income">月收入（税前）</label>
+        <div class="input-wrap">
+          <input type="number" id="income" placeholder="请输入税前月收入" min="0" step="0.01">
+          <span>元</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="insurance">五险一金个人缴纳部分</label>
+        <div class="input-wrap">
+          <input type="number" id="insurance" placeholder="请输入个人缴纳金额" min="0" step="0.01" value="0">
+          <span>元</span>
+        </div>
+        <p class="hint">包括养老保险、医疗保险、失业保险、住房公积金等个人部分</p>
+      </div>
+
+      <div class="form-group">
+        <label for="deduction">专项附加扣除总额</label>
+        <div class="input-wrap">
+          <input type="number" id="deduction" placeholder="请输入专项附加扣除总额" min="0" step="0.01" value="0">
+          <span>元</span>
+        </div>
+        <p class="hint">如子女教育、继续教育、住房贷款利息、住房租金、赡养老人、婴幼儿照护等</p>
+      </div>
+
+      <button type="button" id="calcBtn">计算个税</button>
+    </div>
+
+    <div class="card results" id="results">
+      <h2>计算结果</h2>
+      <div class="result-row">
+        <span class="label">应纳税所得额</span>
+        <span class="value" id="taxableIncome">—</span>
+      </div>
+      <div class="result-row">
+        <span class="label">应纳税额</span>
+        <span class="value" id="taxAmount">—</span>
+      </div>
+      <div class="result-row highlight">
+        <span class="label">税后收入</span>
+        <span class="value" id="afterTax">—</span>
+      </div>
+    </div>
+
+    <footer>
+      本计算器依据现行中国个人所得税法设计，结果仅供参考，不构成税务建议。
+    </footer>
+  </div>
+
+  <script>
+    // 累计预扣率表（含速算扣除数）
+    const TAX_BRACKETS = [
+      { max: 36000, rate: 0.03, quickDeduction: 0 },
+      { max: 144000, rate: 0.10, quickDeduction: 2520 },
+      { max: 300000, rate: 0.20, quickDeduction: 16920 },
+      { max: 420000, rate: 0.25, quickDeduction: 31920 },
+      { max: 660000, rate: 0.30, quickDeduction: 52920 },
+      { max: 960000, rate: 0.35, quickDeduction: 85920 },
+      { max: Infinity, rate: 0.45, quickDeduction: 181920 },
+    ];
+
+    const STANDARD_DEDUCTION = 5000;
+
+    function formatMoney(amount) {
+      return amount.toLocaleString("zh-CN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) + " 元";
+    }
+
+    function getBracket(taxableIncome) {
+      for (const bracket of TAX_BRACKETS) {
+        if (taxableIncome <= bracket.max) {
+          return bracket;
+        }
+      }
+      return TAX_BRACKETS[TAX_BRACKETS.length - 1];
+    }
+
+    function calculateTax(income, insurance, specialDeduction) {
+      // 累计预扣法（单月）：应纳税所得额 = 收入 - 减除费用 - 五险一金 - 专项附加扣除
+      const taxableIncome = Math.max(
+        0,
+        income - STANDARD_DEDUCTION - insurance - specialDeduction
+      );
+
+      let tax = 0;
+      if (taxableIncome > 0) {
+        const bracket = getBracket(taxableIncome);
+        tax = taxableIncome * bracket.rate - bracket.quickDeduction;
+        tax = Math.max(0, tax);
+      }
+
+      const afterTax = income - insurance - tax;
+
+      return { taxableIncome, tax, afterTax };
+    }
+
+    function parseInput(value) {
+      const num = parseFloat(value);
+      return isNaN(num) ? null : num;
+    }
+
+    function showError(message) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = message;
+      el.classList.add("visible");
+    }
+
+    function hideError() {
+      document.getElementById("errorMsg").classList.remove("visible");
+    }
+
+    function handleCalculate() {
+      hideError();
+
+      const income = parseInput(document.getElementById("income").value);
+      const insurance = parseInput(document.getElementById("insurance").value);
+      const deduction = parseInput(document.getElementById("deduction").value);
+
+      if (income === null || income < 0) {
+        showError("请输入有效的月收入（税前）。");
+        document.getElementById("results").classList.remove("visible");
+        return;
+      }
+
+      if (insurance === null || insurance < 0) {
+        showError("请输入有效的五险一金个人缴纳金额。");
+        document.getElementById("results").classList.remove("visible");
+        return;
+      }
+
+      if (deduction === null || deduction < 0) {
+        showError("请输入有效的专项附加扣除总额。");
+        document.getElementById("results").classList.remove("visible");
+        return;
+      }
+
+      if (insurance + deduction + STANDARD_DEDUCTION > income) {
+        showError("扣除项总额已超过月收入，请检查输入。");
+        document.getElementById("results").classList.remove("visible");
+        return;
+      }
+
+      const result = calculateTax(income, insurance, deduction);
+
+      document.getElementById("taxableIncome").textContent = formatMoney(result.taxableIncome);
+      document.getElementById("taxAmount").textContent = formatMoney(result.tax);
+      document.getElementById("afterTax").textContent = formatMoney(result.afterTax);
+      document.getElementById("results").classList.add("visible");
+    }
+
+    document.getElementById("calcBtn").addEventListener("click", handleCalculate);
+
+    document.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          handleCalculate();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
