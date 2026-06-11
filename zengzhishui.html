@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>增值税计算器</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-main: #1E1F2C;
+      --bg-card: #272838;
+      --bg-input: #1E1F2C;
+      --border-input: #3F4057;
+      --accent: #2A9D8F;
+      --accent-alt: #4F46E5;
+      --text-primary: #E5E7EB;
+      --text-secondary: #9CA3AF;
+      --text-error: #F87171;
+      --radius: 8px;
+      --transition: 0.2s ease;
+      --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.35);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 24px 16px 48px;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    /* Mode toggle */
+    .mode-toggle {
+      display: flex;
+      background: var(--bg-main);
+      border-radius: var(--radius);
+      padding: 4px;
+      margin-bottom: 24px;
+      gap: 4px;
+    }
+
+    .mode-toggle button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .mode-toggle button.active {
+      background: rgba(42, 157, 143, 0.25);
+      color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .mode-toggle button:hover:not(.active) {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-of-type { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    label .hint {
+      font-weight: 400;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      opacity: 0.85;
+    }
+
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-input);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      outline: none;
+    }
+
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(42, 157, 143, 0.2);
+    }
+
+    input[type="number"].error,
+    select.error {
+      border-color: var(--text-error);
+    }
+
+    input[type="number"]::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.6;
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239CA3AF' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    .input-unit {
+      position: relative;
+    }
+
+    .input-unit .unit {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      pointer-events: none;
+    }
+
+    .input-unit input { padding-right: 40px; }
+
+    .radio-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .radio-group label.radio-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0;
+      padding: 8px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-input);
+      border-radius: var(--radius);
+      cursor: pointer;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .radio-group label.radio-item:has(input:checked) {
+      border-color: var(--accent);
+      background: rgba(42, 157, 143, 0.1);
+    }
+
+    .radio-group input[type="radio"] {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-input);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color var(--transition);
+    }
+
+    .checkbox-row:has(input:checked) {
+      border-color: var(--accent);
+      background: rgba(42, 157, 143, 0.08);
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .checkbox-row .checkbox-text {
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    .rate-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(79, 70, 229, 0.15);
+      border: 1px solid rgba(79, 70, 229, 0.4);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      color: #A5B4FC;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rate-badge.exempt {
+      background: rgba(42, 157, 143, 0.15);
+      border-color: rgba(42, 157, 143, 0.4);
+      color: var(--accent);
+    }
+
+    .policy-tip {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--radius);
+      border-left: 3px solid var(--accent-alt);
+    }
+
+    .error-msg {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: var(--text-error);
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    .btn-calc {
+      width: 100%;
+      margin-top: 24px;
+      padding: 12px 20px;
+      background: rgba(42, 157, 143, 0.2);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .btn-calc:hover {
+      background: rgba(42, 157, 143, 0.35);
+      color: #fff;
+    }
+
+    .btn-calc:active {
+      transform: scale(0.99);
+    }
+
+    /* Results */
+    .results {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-input);
+      display: none;
+    }
+
+    .results.show { display: block; }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .results-header h2 {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .exempt-tag {
+      display: none;
+      padding: 4px 10px;
+      background: rgba(42, 157, 143, 0.2);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .exempt-tag.show { display: inline-block; }
+
+    .result-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 12px 14px;
+      background: var(--bg-main);
+      border-radius: var(--radius);
+    }
+
+    .result-item.highlight {
+      background: rgba(42, 157, 143, 0.12);
+      border: 1px solid rgba(42, 157, 143, 0.3);
+    }
+
+    .result-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .result-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+
+    .result-item.highlight .result-value {
+      font-size: 1.5rem;
+      color: var(--accent);
+    }
+
+    .result-value .unit {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+
+    .exempt-notice {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: rgba(42, 157, 143, 0.1);
+      border: 1px solid rgba(42, 157, 143, 0.3);
+      border-radius: var(--radius);
+      color: var(--accent);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .exempt-notice.show { display: block; }
+
+    /* Legal */
+    .legal {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .legal h3 {
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .legal ul {
+      padding-left: 18px;
+      margin-bottom: 12px;
+    }
+
+    .legal li { margin-bottom: 6px; }
+
+    .legal .warning {
+      color: #FBBF24;
+      margin-top: 8px;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+      body { padding: 16px 12px 32px; }
+      .card { padding: 18px; }
+      header h1 { font-size: 1.4rem; }
+      .result-value { font-size: 1.1rem; }
+      .result-item.highlight .result-value { font-size: 1.3rem; }
+      .radio-group { flex-direction: column; }
+      .radio-group label.radio-item { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>增值税计算器</h1>
+      <p>简易计税 · 一般计税 · 一键估算</p>
+    </header>
+
+    <div class="card">
+      <div class="mode-toggle" role="tablist">
+        <button type="button" class="active" data-mode="simple" role="tab" aria-selected="true">简易计税</button>
+        <button type="button" data-mode="general" role="tab" aria-selected="false">一般计税</button>
+      </div>
+
+      <!-- 简易计税 -->
+      <div id="panel-simple">
+        <div class="form-group">
+          <label for="simple-identity">纳税人身份</label>
+          <select id="simple-identity">
+            <option value="personal_housing">个人出租住房</option>
+            <option value="personal_non_housing">个人出租非住房</option>
+            <option value="small_goods">小规模纳税人（销售货物/服务）</option>
+            <option value="small_realestate">小规模纳税人（不动产租赁/销售）</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="simple-amount">金额</label>
+          <div class="input-unit">
+            <input type="number" id="simple-amount" min="0" step="0.01" placeholder="请输入金额">
+            <span class="unit">元</span>
+          </div>
+          <div class="error-msg" id="simple-amount-error">请输入有效的非负金额</div>
+        </div>
+
+        <div class="form-group">
+          <label>金额类型</label>
+          <div class="radio-group">
+            <label class="radio-item">
+              <input type="radio" name="simple-price-type" value="inclusive" checked>
+              含税价
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="simple-price-type" value="exclusive">
+              不含税价
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" id="simple-exempt-group">
+          <label class="checkbox-row">
+            <input type="checkbox" id="simple-exempt">
+            <span class="checkbox-text">月销售额未超过 10 万元（适用免征增值税）</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>适用征收率</label>
+          <div id="simple-rate-display"></div>
+          <div class="policy-tip hidden" id="simple-policy-tip"></div>
+        </div>
+      </div>
+
+      <!-- 一般计税 -->
+      <div id="panel-general" class="hidden">
+        <div class="form-group">
+          <label for="general-business">业务类型</label>
+          <select id="general-business">
+            <option value="goods_13">销售货物或有形动产租赁（光租、干租）</option>
+            <option value="realestate_9">销售不动产（房屋、建筑物）</option>
+            <option value="land_9">销售土地使用权</option>
+            <option value="intangible_6">销售其他无形资产（商标、专利、非技术著作权、商誉等）</option>
+            <option value="tech_exempt">技术转让、技术开发</option>
+            <option value="copyright_exempt">个人转让著作权</option>
+            <option value="modern_service_6">现代服务业（咨询、设计、广告等）</option>
+            <option value="transport_build_9">交通运输、建筑服务</option>
+            <option value="export_0">出口货物</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="general-amount">金额</label>
+          <div class="input-unit">
+            <input type="number" id="general-amount" min="0" step="0.01" placeholder="请输入金额">
+            <span class="unit">元</span>
+          </div>
+          <div class="error-msg" id="general-amount-error">请输入有效的非负金额</div>
+        </div>
+
+        <div class="form-group">
+          <label>金额类型</label>
+          <div class="radio-group">
+            <label class="radio-item">
+              <input type="radio" name="general-price-type" value="inclusive" checked>
+              含税价
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="general-price-type" value="exclusive">
+              不含税价
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="general-input-tax">进项税额 <span class="hint">（仅当您有进项发票时可扣除）</span></label>
+          <div class="input-unit">
+            <input type="number" id="general-input-tax" min="0" step="0.01" placeholder="无进项可留空，默认为 0">
+            <span class="unit">元</span>
+          </div>
+          <div class="error-msg" id="general-input-error">进项税额不能为负数</div>
+        </div>
+
+        <div class="form-group">
+          <label>适用税率</label>
+          <div id="general-rate-display"></div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-calc" id="btn-calc">计 算</button>
+
+      <div class="results" id="results">
+        <div class="results-header">
+          <h2>计算结果</h2>
+          <span class="exempt-tag" id="exempt-tag">免税</span>
+        </div>
+        <div class="result-grid" id="result-grid"></div>
+        <div class="exempt-notice" id="exempt-notice">免征增值税</div>
+      </div>
+    </div>
+
+    <div class="card legal">
+      <h3>政策说明与风险提示</h3>
+      <ul>
+        <li><strong>免征标准：</strong>月销售额 10 万元以下免征增值税（2023–2027 年政策）。</li>
+        <li><strong>技术转让、技术开发：</strong>符合条件的技术转让、技术开发收入免征增值税。</li>
+        <li><strong>个人转让著作权：</strong>个人转让著作权收入免征增值税。</li>
+        <li><strong>小规模征收率：</strong>销售货物/服务法定征收率为 3%；现行政策可减按 1% 征收，本计算器按法定 3% 计算，实际请以税务机关核定为准。</li>
+      </ul>
+      <p class="warning">⚠ 一般计税模式下，进项税额抵扣须凭合法合规的增值税专用发票等凭证，本计算器结果仅为估算，不构成税务建议。</p>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const SIMPLE_RATES = {
+        personal_housing: { rate: 0.015, label: '1.5%', showExempt: true },
+        personal_non_housing: { rate: 0.05, label: '5%', showExempt: true },
+        small_goods: { rate: 0.03, label: '3%', showExempt: true, tip: '现行政策可减按 1% 征收，但本计算器按法定 3% 计算，实际请以税务局为准。' },
+        small_realestate: { rate: 0.05, label: '5%', showExempt: false }
+      };
+
+      const GENERAL_RATES = {
+        goods_13: { rate: 0.13, label: '13%', exempt: false },
+        realestate_9: { rate: 0.09, label: '9%', exempt: false },
+        land_9: { rate: 0.09, label: '9%', exempt: false },
+        intangible_6: { rate: 0.06, label: '6%', exempt: false },
+        tech_exempt: { rate: 0, label: '免税', exempt: true },
+        copyright_exempt: { rate: 0, label: '免税', exempt: true },
+        modern_service_6: { rate: 0.06, label: '6%', exempt: false },
+        transport_build_9: { rate: 0.09, label: '9%', exempt: false },
+        export_0: { rate: 0, label: '0%', exempt: false }
+      };
+
+      let currentMode = 'simple';
+
+      const els = {
+        modeBtns: document.querySelectorAll('.mode-toggle button'),
+        panelSimple: document.getElementById('panel-simple'),
+        panelGeneral: document.getElementById('panel-general'),
+        simpleIdentity: document.getElementById('simple-identity'),
+        simpleAmount: document.getElementById('simple-amount'),
+        simpleExemptGroup: document.getElementById('simple-exempt-group'),
+        simpleExempt: document.getElementById('simple-exempt'),
+        simpleRateDisplay: document.getElementById('simple-rate-display'),
+        simplePolicyTip: document.getElementById('simple-policy-tip'),
+        simpleAmountError: document.getElementById('simple-amount-error'),
+        generalBusiness: document.getElementById('general-business'),
+        generalAmount: document.getElementById('general-amount'),
+        generalInputTax: document.getElementById('general-input-tax'),
+        generalRateDisplay: document.getElementById('general-rate-display'),
+        generalAmountError: document.getElementById('general-amount-error'),
+        generalInputError: document.getElementById('general-input-error'),
+        btnCalc: document.getElementById('btn-calc'),
+        results: document.getElementById('results'),
+        resultGrid: document.getElementById('result-grid'),
+        exemptTag: document.getElementById('exempt-tag'),
+        exemptNotice: document.getElementById('exempt-notice')
+      };
+
+      function formatMoney(n) {
+        if (!isFinite(n)) return '—';
+        return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      function parseAmount(input) {
+        const v = parseFloat(input.value);
+        if (input.value === '' || isNaN(v) || v < 0) return null;
+        return v;
+      }
+
+      function getPriceType(name) {
+        const checked = document.querySelector(`input[name="${name}"]:checked`);
+        return checked ? checked.value : 'inclusive';
+      }
+
+      function calcFromRate(amount, rate, priceType) {
+        let exclusive, tax, inclusive;
+        if (priceType === 'inclusive') {
+          exclusive = amount / (1 + rate);
+          tax = exclusive * rate;
+          inclusive = amount;
+        } else {
+          exclusive = amount;
+          tax = amount * rate;
+          inclusive = amount * (1 + rate);
+        }
+        return { exclusive, tax, inclusive };
+      }
+
+      function renderRateBadge(container, label, isExempt) {
+        container.innerHTML = `<span class="rate-badge${isExempt ? ' exempt' : ''}">税率 ${label}</span>`;
+      }
+
+      function updateSimpleUI() {
+        const id = els.simpleIdentity.value;
+        const cfg = SIMPLE_RATES[id];
+        renderRateBadge(els.simpleRateDisplay, cfg.label, false);
+        els.simpleExemptGroup.classList.toggle('hidden', !cfg.showExempt);
+        if (!cfg.showExempt) els.simpleExempt.checked = false;
+        if (cfg.tip) {
+          els.simplePolicyTip.textContent = cfg.tip;
+          els.simplePolicyTip.classList.remove('hidden');
+        } else {
+          els.simplePolicyTip.classList.add('hidden');
+        }
+      }
+
+      function updateGeneralUI() {
+        const id = els.generalBusiness.value;
+        const cfg = GENERAL_RATES[id];
+        renderRateBadge(els.generalRateDisplay, cfg.label, cfg.exempt);
+      }
+
+      function switchMode(mode) {
+        currentMode = mode;
+        els.modeBtns.forEach(btn => {
+          const active = btn.dataset.mode === mode;
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-selected', active);
+        });
+        els.panelSimple.classList.toggle('hidden', mode !== 'simple');
+        els.panelGeneral.classList.toggle('hidden', mode !== 'general');
+        els.results.classList.remove('show');
+      }
+
+      function showError(input, errorEl, show) {
+        input.classList.toggle('error', show);
+        errorEl.classList.toggle('show', show);
+      }
+
+      function renderResults(items, isExempt, showExemptNotice) {
+        els.resultGrid.innerHTML = items.map((item, i) => `
+          <div class="result-item${item.highlight ? ' highlight' : ''}">
+            <span class="result-label">${item.label}</span>
+            <span class="result-value">${formatMoney(item.value)}<span class="unit">元</span></span>
+          </div>
+        `).join('');
+        els.exemptTag.classList.toggle('show', isExempt);
+        els.exemptNotice.classList.toggle('show', showExemptNotice);
+        els.results.classList.add('show');
+      }
+
+      function calculateSimple() {
+        const amount = parseAmount(els.simpleAmount);
+        const hasError = amount === null;
+        showError(els.simpleAmount, els.simpleAmountError, hasError);
+        if (hasError) {
+          els.results.classList.remove('show');
+          return;
+        }
+
+        const identity = els.simpleIdentity.value;
+        const cfg = SIMPLE_RATES[identity];
+        const priceType = getPriceType('simple-price-type');
+        const isMonthlyExempt = cfg.showExempt && els.simpleExempt.checked;
+
+        if (isMonthlyExempt) {
+          renderResults([
+            { label: '不含税金额', value: amount },
+            { label: '税额', value: 0, highlight: true },
+            { label: '含税金额', value: amount }
+          ], true, true);
+          return;
+        }
+
+        const { exclusive, tax, inclusive } = calcFromRate(amount, cfg.rate, priceType);
+        renderResults([
+          { label: '不含税金额', value: exclusive },
+          { label: '税额', value: tax, highlight: true },
+          { label: '含税金额', value: inclusive }
+        ], tax === 0, false);
+      }
+
+      function calculateGeneral() {
+        const amount = parseAmount(els.generalAmount);
+        const inputRaw = els.generalInputTax.value;
+        let inputTax = 0;
+        let amountError = amount === null;
+        let inputError = false;
+
+        if (inputRaw !== '') {
+          const v = parseFloat(inputRaw);
+          if (isNaN(v) || v < 0) inputError = true;
+          else inputTax = v;
+        }
+
+        showError(els.generalAmount, els.generalAmountError, amountError);
+        showError(els.generalInputTax, els.generalInputError, inputError);
+        if (amountError || inputError) {
+          els.results.classList.remove('show');
+          return;
+        }
+
+        const business = els.generalBusiness.value;
+        const cfg = GENERAL_RATES[business];
+        const priceType = getPriceType('general-price-type');
+
+        const { exclusive, tax: outputTax } = calcFromRate(amount, cfg.rate, priceType);
+        const payable = outputTax - inputTax;
+        const isExempt = outputTax === 0;
+
+        renderResults([
+          { label: '不含税销售额', value: exclusive },
+          { label: '销项税额', value: outputTax },
+          { label: '进项税额', value: inputTax },
+          { label: '应纳税额', value: payable, highlight: true }
+        ], isExempt, cfg.exempt);
+      }
+
+      function calculate() {
+        if (currentMode === 'simple') calculateSimple();
+        else calculateGeneral();
+      }
+
+      els.modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+      });
+
+      els.simpleIdentity.addEventListener('change', updateSimpleUI);
+      els.generalBusiness.addEventListener('change', updateGeneralUI);
+      els.btnCalc.addEventListener('click', calculate);
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          calculate();
+        }
+      });
+
+      [els.simpleAmount, els.generalAmount, els.generalInputTax].forEach(input => {
+        input.addEventListener('input', () => {
+          input.classList.remove('error');
+          const errId = input.id + '-error';
+          const errEl = document.getElementById(errId);
+          if (errEl) errEl.classList.remove('show');
+        });
+      });
+
+      updateSimpleUI();
+      updateGeneralUI();
+    })();
+  </script>
+</body>
+</html>
