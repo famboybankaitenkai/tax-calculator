@@ -207,15 +207,18 @@
       transform: scale(0.99);
     }
 
-    .results {
+    .card-results {
       display: none;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
     }
 
-    .results.visible {
+    .card-results.visible {
       display: block;
     }
 
-    .results h2 {
+    .card-results-title {
       font-size: 1rem;
       font-weight: 600;
       margin-bottom: 16px;
@@ -334,6 +337,23 @@
       </div>
 
       <button type="button" id="calcBtn">计算个税</button>
+
+      <div class="card-results" id="salaryResults">
+        <h3 class="card-results-title">计算结果</h3>
+        <div class="result-row">
+          <span class="label">应纳税所得额</span>
+          <span class="value" id="taxableIncome">—</span>
+        </div>
+        <div class="result-row">
+          <span class="label">应纳税额（工资个税）</span>
+          <span class="value" id="taxAmount">—</span>
+        </div>
+        <div class="result-row">
+          <span class="label">适用税率</span>
+          <span class="value" id="taxRate">—</span>
+        </div>
+        <p class="hint" id="salaryAfterTaxHint">税后收入（仅供参考）：—</p>
+      </div>
     </div>
 
     <div class="card">
@@ -399,51 +419,43 @@
       </div>
 
       <button type="button" id="calcOtherBtn">计算分类所得</button>
+
+      <div class="card-results" id="otherResults">
+        <h3 class="card-results-title">计算结果</h3>
+        <p id="otherNoTaxHint" class="hint" hidden>扣除后无应税所得</p>
+        <div class="result-row">
+          <span class="label">应纳税所得额</span>
+          <span class="value" id="otherTaxableIncome">—</span>
+        </div>
+        <div class="result-row">
+          <span class="label">适用税率</span>
+          <span class="value" id="otherTaxRate">—</span>
+        </div>
+        <div class="result-row">
+          <span class="label">应纳税额</span>
+          <span class="value" id="otherTaxAmount">—</span>
+        </div>
+        <p class="hint" id="otherAfterTaxHint">税后收入（仅供参考）：—</p>
+      </div>
     </div>
 
-    <div class="card results" id="otherResults">
-      <h2>计算结果</h2>
-      <p id="otherNoTaxHint" class="hint" hidden>扣除后无应税所得</p>
+    <div class="card" id="settlementCard">
+      <h2 class="card-title">纳税结算汇总</h2>
       <div class="result-row">
-        <span class="label">应纳税所得额</span>
-        <span class="value" id="otherTaxableIncome">—</span>
+        <span class="label">工资个税</span>
+        <span class="value" id="settlementSalaryTax">0.00 元</span>
       </div>
       <div class="result-row">
-        <span class="label">应纳税额</span>
-        <span class="value" id="otherTaxAmount">—</span>
-      </div>
-      <p id="otherRateHint" class="hint" hidden></p>
-      <div class="result-row highlight">
-        <span class="label">税后收入</span>
-        <span class="value" id="otherAfterTax">—</span>
-      </div>
-    </div>
-
-    <div class="card results" id="results">
-      <h2>计算结果</h2>
-      <div class="result-row">
-        <span class="label">应纳税所得额</span>
-        <span class="value" id="taxableIncome">—</span>
+        <span class="label">分类所得个税</span>
+        <span class="value" id="settlementOtherTax">0.00 元</span>
       </div>
       <div class="result-row">
-        <span class="label">适用税率</span>
-        <span class="value" id="taxRate">—</span>
-      </div>
-      <div class="result-row">
-        <span class="label">应纳税额</span>
-        <span class="value" id="taxAmount">—</span>
-      </div>
-      <div class="result-row">
-        <span class="label">分类所得应纳税额</span>
-        <span class="value" id="otherTaxInSummary">—</span>
-      </div>
-      <div class="result-row">
-        <span class="label">合计应纳税额</span>
-        <span class="value" id="totalTaxAmount">—</span>
+        <span class="label">总共纳税</span>
+        <span class="value" id="settlementTotalTax">0.00 元</span>
       </div>
       <div class="result-row highlight">
-        <span class="label">税后收入</span>
-        <span class="value" id="afterTax">—</span>
+        <span class="label">总共税后收入</span>
+        <span class="value" id="settlementTotalAfterTax">0.00 元</span>
       </div>
     </div>
 
@@ -465,7 +477,10 @@
     ];
 
     const STANDARD_DEDUCTION = 5000;
+    let savedSalaryTax = null;
+    let savedSalaryAfterTax = null;
     let savedOtherTax = null;
+    let savedOtherIncome = null;
 
     function formatMoney(amount) {
       return amount.toLocaleString("zh-CN", {
@@ -538,27 +553,37 @@
       document.getElementById("otherErrorMsg").classList.remove("visible");
     }
 
+    function updateSettlement() {
+      const salaryTax = savedSalaryTax ?? 0;
+      const otherTax = savedOtherTax ?? 0;
+      const salaryAfterTax = savedSalaryAfterTax ?? 0;
+      const otherIncome = savedOtherIncome ?? 0;
+      const totalTax = salaryTax + otherTax;
+      const totalAfterTax = salaryAfterTax + (otherIncome - otherTax);
+
+      document.getElementById("settlementSalaryTax").textContent = formatMoney(salaryTax);
+      document.getElementById("settlementOtherTax").textContent = formatMoney(otherTax);
+      document.getElementById("settlementTotalTax").textContent = formatMoney(totalTax);
+      document.getElementById("settlementTotalAfterTax").textContent = formatMoney(totalAfterTax);
+    }
+
     function clearOtherOutput() {
       hideOtherError();
       savedOtherTax = null;
+      savedOtherIncome = null;
       document.getElementById("otherResults").classList.remove("visible");
       document.getElementById("otherNoTaxHint").hidden = true;
-      document.getElementById("otherRateHint").hidden = true;
       document.getElementById("rentalHousing").checked = false;
+      updateSettlement();
     }
 
-    function showOtherResults(taxableIncome, tax, afterTax, noTaxHint, rateHint) {
+    function showOtherResults(taxableIncome, tax, afterTax, noTaxHint, applicableRate) {
       document.getElementById("otherTaxableIncome").textContent = formatMoney(taxableIncome);
+      document.getElementById("otherTaxRate").textContent = applicableRate;
       document.getElementById("otherTaxAmount").textContent = formatMoney(tax);
-      document.getElementById("otherAfterTax").textContent = formatMoney(afterTax);
+      document.getElementById("otherAfterTaxHint").textContent =
+        "税后收入（仅供参考）：" + formatMoney(afterTax);
       document.getElementById("otherNoTaxHint").hidden = !noTaxHint;
-      const rateHintEl = document.getElementById("otherRateHint");
-      if (rateHint) {
-        rateHintEl.textContent = rateHint;
-        rateHintEl.hidden = false;
-      } else {
-        rateHintEl.hidden = true;
-      }
       document.getElementById("otherResults").classList.add("visible");
     }
 
@@ -566,7 +591,13 @@
       if (type === "interest" || type === "occasional") {
         const taxableIncome = income;
         const tax = taxableIncome * 0.2;
-        return { taxableIncome, tax, afterTax: income - tax, noTaxHint: false, rateHint: null };
+        return {
+          taxableIncome,
+          tax,
+          afterTax: income - tax,
+          noTaxHint: false,
+          applicableRate: "20%",
+        };
       }
 
       if (type === "rental") {
@@ -579,7 +610,7 @@
           tax,
           afterTax: income - tax,
           noTaxHint: false,
-          rateHint: isHousingRental ? "出租住房已按10%税率计算" : "适用20%税率",
+          applicableRate: isHousingRental ? "10%" : "20%",
         };
       }
 
@@ -591,7 +622,7 @@
             tax: 0,
             afterTax: income - deductions,
             noTaxHint: true,
-            rateHint: null,
+            applicableRate: "20%",
           };
         }
         const taxableIncome = income - deductions;
@@ -601,17 +632,22 @@
           tax,
           afterTax: income - deductions - tax,
           noTaxHint: false,
-          rateHint: null,
+          applicableRate: "20%",
         };
       }
 
-      return { taxableIncome: 0, tax: 0, afterTax: 0, noTaxHint: false, rateHint: null };
+      return {
+        taxableIncome: 0,
+        tax: 0,
+        afterTax: 0,
+        noTaxHint: false,
+        applicableRate: "20%",
+      };
     }
 
     function handleCalculateOther() {
       hideOtherError();
       document.getElementById("otherNoTaxHint").hidden = true;
-      document.getElementById("otherRateHint").hidden = true;
 
       const type = document.getElementById("otherType").value;
       const income = parseRequiredNonNegative(
@@ -656,13 +692,15 @@
         type === "rental" && document.getElementById("rentalHousing").checked;
       const result = calculateOtherTax(type, income, original, fee, isHousingRental);
       savedOtherTax = result.tax;
+      savedOtherIncome = income;
       showOtherResults(
         result.taxableIncome,
         result.tax,
         result.afterTax,
         result.noTaxHint,
-        result.rateHint
+        result.applicableRate
       );
+      updateSettlement();
     }
 
     function handleCalculate() {
@@ -674,25 +712,25 @@
 
       if (income === null || income < 0) {
         showError("请输入有效的月收入（税前）。");
-        document.getElementById("results").classList.remove("visible");
+        document.getElementById("salaryResults").classList.remove("visible");
         return;
       }
 
       if (insurance === null || insurance < 0) {
         showError("请输入有效的五险一金个人缴纳金额。");
-        document.getElementById("results").classList.remove("visible");
+        document.getElementById("salaryResults").classList.remove("visible");
         return;
       }
 
       if (deduction === null || deduction < 0) {
         showError("请输入有效的专项附加扣除总额。");
-        document.getElementById("results").classList.remove("visible");
+        document.getElementById("salaryResults").classList.remove("visible");
         return;
       }
 
       if (insurance + deduction + STANDARD_DEDUCTION > income) {
         showError("扣除项总额已超过月收入，请检查输入。");
-        document.getElementById("results").classList.remove("visible");
+        document.getElementById("salaryResults").classList.remove("visible");
         return;
       }
 
@@ -706,11 +744,12 @@
         document.getElementById("taxRate").textContent = (bracket.rate * 100) + "%";
       }
       document.getElementById("taxAmount").textContent = formatMoney(result.tax);
-      const otherTax = savedOtherTax !== null ? savedOtherTax : 0;
-      document.getElementById("otherTaxInSummary").textContent = formatMoney(otherTax);
-      document.getElementById("totalTaxAmount").textContent = formatMoney(result.tax + otherTax);
-      document.getElementById("afterTax").textContent = formatMoney(result.afterTax);
-      document.getElementById("results").classList.add("visible");
+      document.getElementById("salaryAfterTaxHint").textContent =
+        "税后收入（仅供参考）：" + formatMoney(result.afterTax);
+      savedSalaryTax = result.tax;
+      savedSalaryAfterTax = result.afterTax;
+      document.getElementById("salaryResults").classList.add("visible");
+      updateSettlement();
     }
 
     document.getElementById("calcBtn").addEventListener("click", handleCalculate);
@@ -728,6 +767,7 @@
     document.getElementById("otherType").addEventListener("change", updateOtherTypeExtra);
     document.getElementById("calcOtherBtn").addEventListener("click", handleCalculateOther);
     updateOtherTypeExtra();
+    updateSettlement();
 
     document.querySelectorAll("#income, #insurance, #deduction").forEach((input) => {
       input.addEventListener("keydown", (e) => {
